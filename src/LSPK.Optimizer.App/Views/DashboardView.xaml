@@ -38,7 +38,7 @@
                     <StackPanel>
                         <TextBlock Text="PROCESSADOR" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
                         <TextBlock Text="{Binding Specs.CpuName}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,6,0,2" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding Specs.CpuLogicalCores, StringFormat='{0} Núcleos Lógicos'}" FontSize="12" Foreground="{StaticResource BrushTextMuted}"/>
+                        <TextBlock Text="{Binding Specs.CpuLogicalCores, StringFormat='{}{0} Núcleos Lógicos'}" FontSize="12" Foreground="{StaticResource BrushTextMuted}"/>
                         <TextBlock Text="Otimizado para Multi-threading" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
@@ -53,7 +53,7 @@
                             <Run Text="{Binding Specs.TotalRamGb, Mode=OneWay, StringFormat='{}{0:N1} GB'}"/>
                         </TextBlock>
                         <ProgressBar Style="{StaticResource ProgressLspk}" Value="{Binding Specs.RamPercentUsed, Mode=OneWay}" Maximum="100" Margin="0,8,0,4"/>
-                        <TextBlock Text="{Binding Specs.RamPercentUsed, StringFormat='{0}% em utilização'}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
+                        <TextBlock Text="{Binding Specs.RamPercentUsed, StringFormat='{}{0}% em utilização'}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
                     </StackPanel>
                 </Border>
 
