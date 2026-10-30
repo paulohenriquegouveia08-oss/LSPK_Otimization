@@ -43,8 +43,8 @@ export default function App() {
     setActiveFaq(activeFaq === index ? null : index);
   };
 
-  // Caminho público do executável do instalador standalone (relativo para compatibilidade com GitHub Pages e domínios personalizados)
-  const downloadUrl = "./download/LSPKOptimizerSetup.exe";
+  // Link de download direto do executável do instalador standalone oficial (.exe compilado de 120 MB hospedado no GitHub Releases com CDN global)
+  const downloadUrl = "https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/download/v1.0.0/LSPKOptimizerSetup.exe";
 
   // Base de conhecimento das perguntas frequentes
   const faqs = [

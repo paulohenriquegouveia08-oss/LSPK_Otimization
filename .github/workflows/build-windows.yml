@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Source Code
@@ -44,3 +46,9 @@ jobs:
             ./publish/installer/LSPKOptimizerSetup.exe
             ./publish/app/
             ./publish/updater/
+
+      - name: Attach Installer to GitHub Release v1.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.0.0 ./publish/installer/LSPKOptimizerSetup.exe --clobber
