@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "releaseDate": "2026-10-30T12:00:00Z",
+  "minRequiredVersion": "1.0.0",
+  "downloadUrl": "https://updates.lspktech.com/optimizer/updates/releases/1.0.0/LSPKOptimizer-1.0.0.zip",
+  "sha256": "4b5e7d23a105828456fef95b716b9b33a75865d1d6a68f0ae57c6b75fba14389",
+  "critical": false,
+  "releaseNotes": [
+    "Lançamento Oficial do LSPK Optimizer MVP.",
+    "Módulo 1: Limpeza profunda de temporários, miniaturas, shader caches e relatórios de erro.",
+    "Módulo 2: Gerenciamento inteligente e seguro de inicialização com suporte a backup reversível.",
+    "Botão 'Otimizar Agora': Diagnóstico e otimização completa do sistema em 1 único clique.",
+    "Infraestrutura de atualização automática e instalador standalone de alta performance."
+  ]
+}

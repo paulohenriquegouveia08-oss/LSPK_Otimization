@@ -1,0 +1,46 @@
+name: Build Windows Binaries
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore LSPK.Optimizer.sln
+
+      - name: Run Automated Tests
+        run: dotnet test src/LSPK.Optimizer.Tests/LSPK.Optimizer.Tests.csproj --no-restore --verbosity normal
+
+      - name: Publish LSPK Optimizer App (Windows Desktop x64)
+        run: |
+          dotnet publish src/LSPK.Optimizer.App/LSPK.Optimizer.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/app
+
+      - name: Publish Standalone Setup Installer (LSPKOptimizerSetup.exe)
+        run: |
+          dotnet publish src/LSPK.Optimizer.Installer/LSPK.Optimizer.Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/installer
+
+      - name: Publish Independent Updater (LSPK.Optimizer.Updater.exe)
+        run: |
+          dotnet publish src/LSPK.Optimizer.Updater/LSPK.Optimizer.Updater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/updater
+
+      - name: Upload Windows Binaries Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: LSPK-Optimizer-Windows-x64
+          path: |
+            ./publish/installer/LSPKOptimizerSetup.exe
+            ./publish/app/
+            ./publish/updater/

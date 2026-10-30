@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0B0F17;
+    color: #F8FAFC;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+}
+
+.glow-cyan {
+  box-shadow: 0 0 40px -10px rgba(0, 242, 254, 0.35);
+}
+
+.glow-gradient {
+  background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%);
+}

@@ -1,0 +1,145 @@
+<UserControl x:Class="LSPK.Optimizer.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:LSPK.Optimizer.App.ViewModels"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance vm:MainViewModel}"
+             Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,24,32,32">
+            
+            <!-- Grid de Hardware e Telemetria Real -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Card Sistema Operacional -->
+                <Border Grid.Column="0" Style="{StaticResource CardLspk}">
+                    <StackPanel>
+                        <TextBlock Text="SISTEMA" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                        <TextBlock Text="{Binding Specs.OsName}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,6,0,2" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Specs.OsVersion}" FontSize="12" Foreground="{StaticResource BrushTextMuted}"/>
+                        <TextBlock Text="{Binding Specs.OsArchitecture, StringFormat='Arquitetura {0}'}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card Processador -->
+                <Border Grid.Column="2" Style="{StaticResource CardLspk}">
+                    <StackPanel>
+                        <TextBlock Text="PROCESSADOR" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                        <TextBlock Text="{Binding Specs.CpuName}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,6,0,2" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Specs.CpuLogicalCores, StringFormat='{0} Núcleos Lógicos'}" FontSize="12" Foreground="{StaticResource BrushTextMuted}"/>
+                        <TextBlock Text="Otimizado para Multi-threading" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card Memória RAM -->
+                <Border Grid.Column="4" Style="{StaticResource CardLspk}">
+                    <StackPanel>
+                        <TextBlock Text="MEMÓRIA RAM" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,6,0,2">
+                            <Run Text="{Binding Specs.UsedRamGb, Mode=OneWay, StringFormat='{}{0:N1}'}"/>
+                            <Run Text=" / " Foreground="{StaticResource BrushTextMuted}"/>
+                            <Run Text="{Binding Specs.TotalRamGb, Mode=OneWay, StringFormat='{}{0:N1} GB'}"/>
+                        </TextBlock>
+                        <ProgressBar Style="{StaticResource ProgressLspk}" Value="{Binding Specs.RamPercentUsed, Mode=OneWay}" Maximum="100" Margin="0,8,0,4"/>
+                        <TextBlock Text="{Binding Specs.RamPercentUsed, StringFormat='{0}% em utilização'}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card Disco do Sistema -->
+                <Border Grid.Column="6" Style="{StaticResource CardLspk}">
+                    <StackPanel>
+                        <TextBlock Text="DISCO DO SISTEMA (C:)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,6,0,2">
+                            <Run Text="{Binding Specs.SystemDriveFreeGb, Mode=OneWay, StringFormat='{}{0:N0} GB'}"/>
+                            <Run Text=" livres" FontSize="12" Foreground="{StaticResource BrushGreen}"/>
+                        </TextBlock>
+                        <ProgressBar Style="{StaticResource ProgressLspk}" Value="{Binding Specs.SystemDrivePercentUsed, Mode=OneWay}" Maximum="100" Margin="0,8,0,4"/>
+                        <TextBlock Text="{Binding Specs.SystemDriveTotalGb, StringFormat='Capacidade Total: {0:N0} GB'}" FontSize="11" Foreground="{StaticResource BrushTextSecondary}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Card Central: Pontuação de Saúde e Botão Principal OTIMIZAR AGORA -->
+            <Border Style="{StaticResource CardLspk}" Background="#12192B" Padding="40" Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Gauge Circular de Saúde -->
+                    <Border Grid.Column="0" Width="180" Height="180" CornerRadius="90" Background="#0D1424" BorderBrush="{StaticResource BrushBorderHighlight}" BorderThickness="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding Health.Score}" FontSize="56" FontWeight="Bold" Foreground="{StaticResource BrushCyan}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Health.StatusLevel}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" HorizontalAlignment="Center" Margin="0,-4,0,0"/>
+                            <TextBlock Text="Score de Saúde" FontSize="11" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Painel de Ação e Descrição -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="24,0,0,0">
+                        <TextBlock Text="Otimização Completa do Windows" FontSize="26" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}"/>
+                        <TextBlock Text="Execute o diagnóstico completo do sistema, libere espaço de disco com segurança eliminando caches desnecessários e calibre a inicialização para acelerar o boot."
+                                   FontSize="14" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,8,0,24" LineHeight="20"/>
+
+                        <!-- Botão Otimizar Agora -->
+                        <Button Style="{StaticResource ButtonPrimaryLspk}"
+                                Command="{Binding OptimizeNowCommand}"
+                                Height="56"
+                                HorizontalAlignment="Left"
+                                Padding="36,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconBolt}" Width="16" Height="16" Fill="#050B14" Stretch="Uniform" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="OTIMIZAR AGORA" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Atalhos de Módulos Rápidos -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Atalho Limpeza -->
+                <Border Grid.Column="0" Style="{StaticResource CardLspk}">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="MÓDULO DE LIMPEZA" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                            <TextBlock Text="Temporários, miniaturas, shaders e relatórios de erro." FontSize="13" Foreground="{StaticResource BrushTextSecondary}" Margin="0,6,0,16"/>
+                            <Button Style="{StaticResource ButtonSecondaryLspk}" Content="Abrir Módulo de Limpeza" Command="{Binding NavigateCleanerCommand}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Atalho Inicialização -->
+                <Border Grid.Column="2" Style="{StaticResource CardLspk}">
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="GERENCIADOR DE INICIALIZAÇÃO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushCyan}"/>
+                            <TextBlock Text="Controle programas de inicialização e elimine resíduos órfãos com backup." FontSize="13" Foreground="{StaticResource BrushTextSecondary}" Margin="0,6,0,16"/>
+                            <Button Style="{StaticResource ButtonSecondaryLspk}" Content="Gerenciar Inicialização" Command="{Binding NavigateStartupCommand}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
