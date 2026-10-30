@@ -1,111 +1,253 @@
-import React, { useState } from 'react';
-import { 
-  Zap, 
-  ShieldCheck, 
-  Trash2, 
-  Rocket, 
-  Cpu, 
-  HardDrive, 
-  CheckCircle2, 
-  Download, 
-  ChevronDown, 
-  ChevronUp, 
-  RefreshCw, 
-  Lock, 
-  Layers, 
-  Monitor, 
-  AlertTriangle 
-} from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Zap,
+  ShieldCheck,
+  Trash2,
+  Cpu,
+  HardDrive,
+  CheckCircle2,
+  XCircle,
+  Lock,
+  RefreshCw,
+  Play,
+  ArrowRight,
+  ChevronDown,
+  Download,
+  Layers,
+  Activity,
+  Sparkles,
+  Clock,
+  Terminal,
+  ExternalLink,
+  Sliders,
+  Check,
+  AlertCircle
+} from "lucide-react";
+
+/**
+ * Interface representando uma categoria de limpeza para o simulador interativo.
+ */
+interface CleanCategory {
+  id: string;
+  name: string;
+  path: string;
+  sizeMb: number;
+  selected: boolean;
+  safe: boolean;
+}
+
+/**
+ * Interface representando um programa de inicialização para o simulador interativo.
+ */
+interface StartupItem {
+  id: string;
+  name: string;
+  publisher: string;
+  impact: "Alto" | "Médio" | "Baixo";
+  enabled: boolean;
+  isSystemProtected: boolean;
+  isOrphan: boolean;
+}
 
 /**
  * Componente principal da Landing Page do LSPK Optimizer.
- * Desenvolvido em React 19 com TypeScript e Tailwind CSS.
- * Implementa todas as 9 seções obrigatórias especificadas para o MVP:
- * 1. Apresentação (Hero com Mockup)
- * 2. Benefícios (Diferenciais Técnicos)
- * 3. Como Funciona (Pipeline de 1 Clique)
- * 4. Módulo 1 (Limpeza de Arquivos)
- * 5. Módulo 2 (Gerenciamento de Inicialização)
- * 6. Segurança e Blindagem
- * 7. Compatibilidade e Requisitos
- * 8. Perguntas Frequentes (FAQ Interativo)
- * 9. Rodapé Institucional
+ * Desenvolvido em React 19 com TypeScript, Tailwind CSS e micro-interações nativas.
+ * Inclui simulador interativo do aplicativo no Hero, alternador de módulos em tempo real,
+ * matriz de segurança e animações fluidas.
  */
 export default function App() {
-  // Estado para controle de qual item do acordeão de FAQ está expandido no momento
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
-
-  /**
-   * Alterna a expansão da pergunta do FAQ clicada.
-   * Se já estiver aberta, fecha; caso contrário, abre e fecha as demais.
-   */
-  const toggleFaq = (index: number) => {
-    setActiveFaq(activeFaq === index ? null : index);
-  };
-
-  // Link de download direto do executável do instalador standalone oficial (.exe compilado de 120 MB hospedado no GitHub Releases com CDN global)
+  // Link oficial de download direto do executável no GitHub Releases (120 MB binário compilado Windows x64)
   const downloadUrl = "https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/download/v1.0.0/LSPKOptimizerSetup.exe";
 
-  // Base de conhecimento das perguntas frequentes
-  const faqs = [
-    {
-      q: "O LSPK Optimizer apaga meus arquivos pessoais ou documentos?",
-      a: "Nunca. O LSPK Optimizer possui uma política rigorosa de segurança em nível de código (Path Whitelist). Pastas como Documentos, Downloads, Área de Trabalho, Imagens e Músicas são estritamente blindadas contra qualquer tipo de varredura ou exclusão."
-    },
-    {
-      q: "Preciso de privilégios de Administrador (UAC) para instalar?",
-      a: "Não para a instalação padrão. O instalador personalizado foi projetado para instalar no escopo do usuário (%LocalAppData%\\Programs\\LSPK Optimizer), permitindo uso imediato sem alertas intrusivos de elevação."
-    },
-    {
-      q: "O que acontece ao desativar um programa de inicialização?",
-      a: "Diferente de ferramentas genéricas, o LSPK Optimizer nunca deleta chaves permanentemente. Ele realiza backup automático em chaves dedicadas e espelha o status nativo do Windows, permitindo que você reative o programa a qualquer momento com um clique."
-    },
-    {
-      q: "Como funcionam as atualizações automáticas?",
-      a: "Ao abrir o aplicativo, uma consulta silenciosa verifica se há nova versão estável disponível. Caso haja, o pacote é baixado em segundo plano e validado com criptografia SHA-256. Você é notificado por um banner discreto para aplicar quando for conveniente."
-    },
-    {
-      q: "Existe alguma telemetria remota ou envio de dados?",
-      a: "Zero. O MVP do LSPK Optimizer opera 100% offline no seu computador. Não há criação de contas, logins, rastreadores ou bancos de dados remotos coletando informações dos seus hábitos ou hardware."
-    }
+  // Controle de FAQ expandido
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  // Aba ativa na seção de módulos interativos (limpeza ou inicialização)
+  const [activeModuleTab, setActiveModuleTab] = useState<"cleaner" | "startup">("cleaner");
+
+  // Estado do Simulador do Hero
+  const [simOptimizing, setSimOptimizing] = useState(false);
+  const [simStep, setSimStep] = useState(0);
+  const [simProgress, setSimProgress] = useState(0);
+  const [simScore, setSimScore] = useState(64);
+  const [simCompleted, setSimCompleted] = useState(false);
+  const [simFreedMb, setSimFreedMb] = useState(0);
+
+  // Lista de categorias de limpeza no módulo interativo
+  const [cleanCategories, setCleanCategories] = useState<CleanCategory[]>([
+    { id: "temp", name: "Arquivos Temporários do Usuário", path: "%TEMP%", sizeMb: 1840, selected: true, safe: true },
+    { id: "wintemp", name: "Arquivos Temporários do Windows", path: "C:\\Windows\\Temp", sizeMb: 920, selected: true, safe: true },
+    { id: "thumbs", name: "Cache de Miniaturas (Explorer)", path: "%LocalAppData%\\Microsoft\\Windows\\Explorer", sizeMb: 480, selected: true, safe: true },
+    { id: "shaders", name: "Cache de Shaders DirectX / GPU", path: "%LocalAppData%\\D3DSCache", sizeMb: 610, selected: true, safe: true },
+    { id: "wer", name: "Relatórios de Erros e Crash Dumps", path: "%LocalAppData%\\CrashDumps", sizeMb: 350, selected: true, safe: true },
+    { id: "bin", name: "Lixeira do Windows", path: "Recycle.Bin (API SHEmpty)", sizeMb: 1250, selected: true, safe: true }
+  ]);
+
+  // Lista de itens de inicialização no módulo interativo
+  const [startupItems, setStartupItems] = useState<StartupItem[]>([
+    { id: "discord", name: "Discord", publisher: "Discord Inc.", impact: "Alto", enabled: true, isSystemProtected: false, isOrphan: false },
+    { id: "spotify", name: "Spotify", publisher: "Spotify AB", impact: "Alto", enabled: true, isSystemProtected: false, isOrphan: false },
+    { id: "steam", name: "Steam Client Bootstrapper", publisher: "Valve Corporation", impact: "Médio", enabled: true, isSystemProtected: false, isOrphan: false },
+    { id: "orphan1", name: "UpdateHelper_Uninstalled", publisher: "Desconhecido (Órfão)", impact: "Baixo", enabled: true, isSystemProtected: false, isOrphan: true },
+    { id: "defender", name: "Windows Security Notification", publisher: "Microsoft Corporation", impact: "Baixo", enabled: true, isSystemProtected: true, isOrphan: false },
+    { id: "audio", name: "Realtek HD Audio Universal Service", publisher: "Realtek Semiconductor", impact: "Baixo", enabled: true, isSystemProtected: true, isOrphan: false }
+  ]);
+
+  // Passos textuais da simulação no Hero
+  const simSteps = [
+    "Iniciando diagnóstico seguro do sistema...",
+    "Escaneando arquivos temporários e caches bloqueados...",
+    "Auditando entradas do registro em HKCU e HKLM...",
+    "Identificando programas de inicialização órfãos...",
+    "Removendo com segurança arquivos elegíveis...",
+    "Aplicando ajustes não destrutivos de inicialização...",
+    "Otimização concluída! Desempenho restaurado."
   ];
 
+  /**
+   * Executa a simulação interativa do botão "OTIMIZAR AGORA" no Hero Mockup.
+   */
+  const handleStartSimulation = () => {
+    if (simOptimizing) return;
+    setSimOptimizing(true);
+    setSimCompleted(false);
+    setSimStep(0);
+    setSimProgress(5);
+    setSimFreedMb(0);
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      currentStep++;
+      if (currentStep < simSteps.length) {
+        setSimStep(currentStep);
+        setSimProgress(Math.min(100, Math.round((currentStep / (simSteps.length - 1)) * 100)));
+        setSimFreedMb(prev => Math.min(4250, prev + 700));
+        setSimScore(prev => Math.min(98, prev + 5));
+      } else {
+        clearInterval(interval);
+        setSimOptimizing(false);
+        setSimCompleted(true);
+        setSimScore(98);
+        setSimFreedMb(4250);
+        setSimProgress(100);
+      }
+    }, 900);
+  };
+
+  /**
+   * Reinicia o estado do simulador para permitir novo teste pelo visitante.
+   */
+  const handleResetSimulation = () => {
+    setSimOptimizing(false);
+    setSimCompleted(false);
+    setSimStep(0);
+    setSimProgress(0);
+    setSimScore(64);
+    setSimFreedMb(0);
+  };
+
+  /**
+   * Alterna seleção de uma categoria de limpeza no módulo interativo.
+   */
+  const toggleCleanCategory = (id: string) => {
+    setCleanCategories(prev =>
+      prev.map(cat => (cat.id === id ? { ...cat, selected: !cat.selected } : cat))
+    );
+  };
+
+  /**
+   * Alterna status de ativação de um item de inicialização no módulo interativo.
+   */
+  const toggleStartupItem = (id: string) => {
+    setStartupItems(prev =>
+      prev.map(item => {
+        if (item.id === id && !item.isSystemProtected) {
+          return { ...item, enabled: !item.enabled };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Cálculo dinâmico do total de MB selecionados para limpeza
+  const totalSelectedCleanMb = cleanCategories
+    .filter(c => c.selected)
+    .reduce((acc, curr) => acc + curr.sizeMb, 0);
+
+  // Cálculo dinâmico do impacto de inicialização
+  const activeStartupCount = startupItems.filter(i => i.enabled).length;
+
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-[#F8FAFC]">
+    <div className="min-h-screen bg-[#070B14] text-[#F8FAFC] selection:bg-cyan-500 selection:text-black relative overflow-hidden">
+      {/* Malha de fundo cibernética e luzes radiais */}
+      <div className="fixed inset-0 cyber-grid pointer-events-none opacity-40 z-0" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] radial-glow-top pointer-events-none z-0" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] radial-glow-center pointer-events-none z-0" />
+
       {/* =========================================================================
-          CABEÇALHO / NAVBAR FIXA COM LOGO E BOTÃO DE DOWNLOAD DIRETO
+          1. HEADER / BARRA DE NAVEGAÇÃO FLUTUANTE
           ========================================================================= */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0B0F17]/85 border-b border-[#1E293B]">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#070B14]/80 border-b border-slate-800/80 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          {/* Logotipo da Marca LSPK Technology */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl glow-gradient flex items-center justify-center text-black shadow-lg shadow-cyan-500/20">
-              <Zap className="w-6 h-6 fill-black text-black" />
+          {/* Logo e Identidade LSPK Technology */}
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-xl glow-gradient flex items-center justify-center text-black shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/40">
+              <Zap className="w-5 h-5 fill-black text-black stroke-[2.5]" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-white">LSPK</span>{" "}
-              <span className="text-xl font-extrabold text-transparent bg-clip-text glow-gradient">OPTIMIZER</span>
-              <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-[#162238] text-cyan-400 border border-cyan-500/30">MVP 1.0</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-xl font-extrabold tracking-tight text-white">LSPK</span>
+                <span className="text-xl font-black text-transparent bg-clip-text glow-gradient">
+                  OPTIMIZER
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+                  MVP 1.0
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium tracking-wide">
+                Engenharia de Performance • LSPK Technology
+              </p>
             </div>
           </div>
 
-          {/* Links de Navegação Suave (Desktop) */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
-            <a href="#beneficios" className="hover:text-cyan-400 transition">Benefícios</a>
-            <a href="#funcionamento" className="hover:text-cyan-400 transition">Como Funciona</a>
-            <a href="#modulos" className="hover:text-cyan-400 transition">Módulos</a>
-            <a href="#seguranca" className="hover:text-cyan-400 transition">Segurança</a>
-            <a href="#compatibilidade" className="hover:text-cyan-400 transition">Compatibilidade</a>
-            <a href="#faq" className="hover:text-cyan-400 transition">FAQ</a>
+          {/* Links de Navegação */}
+          <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium text-slate-300">
+            <a href="#simulador" className="hover:text-cyan-400 transition-colors">
+              Simulador
+            </a>
+            <a href="#beneficios" className="hover:text-cyan-400 transition-colors">
+              Diferenciais
+            </a>
+            <a href="#funcionamento" className="hover:text-cyan-400 transition-colors">
+              Como Funciona
+            </a>
+            <a href="#modulos" className="hover:text-cyan-400 transition-colors">
+              Módulos
+            </a>
+            <a href="#seguranca" className="hover:text-cyan-400 transition-colors">
+              Segurança
+            </a>
+            <a href="#faq" className="hover:text-cyan-400 transition-colors">
+              FAQ
+            </a>
           </nav>
 
-          {/* Botão de Download na Navbar */}
-          <div>
-            <a 
-              href={downloadUrl}
-              className="px-5 py-2.5 rounded-xl glow-gradient font-bold text-black text-sm hover:opacity-90 transition flex items-center space-x-2 shadow-lg shadow-cyan-500/25"
+          {/* Botão de Ação Primária do Header */}
+          <div className="flex items-center space-x-4">
+            <a
+              href="https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:flex items-center space-x-2 text-xs font-semibold px-3 py-2 rounded-lg bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 transition"
             >
-              <Download className="w-4 h-4" />
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Código Aberto</span>
+            </a>
+            <a
+              href={downloadUrl}
+              className="px-5 py-2.5 rounded-xl glow-gradient font-bold text-black text-xs sm:text-sm hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center space-x-2 shadow-lg shadow-cyan-500/25 ring-1 ring-white/30"
+            >
+              <Download className="w-4 h-4 stroke-[2.5]" />
               <span>Baixar Grátis</span>
             </a>
           </div>
@@ -113,117 +255,242 @@ export default function App() {
       </header>
 
       {/* =========================================================================
-          1. SEÇÃO HERO: APRESENTAÇÃO DO PRODUTO E MOCKUP DA APLICAÇÃO
+          2. SEÇÃO HERO COM SIMULADOR INTERATIVO AO VIVO DO APLICATIVO
           ========================================================================= */}
-      <section className="relative pt-20 pb-28 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          {/* Badge Superior Institucional */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#131B2E] border border-cyan-500/30 text-xs font-semibold text-cyan-400 mb-8">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            <span>Engenharia Profissional pela LSPK Technology</span>
+      <section className="relative pt-16 pb-24 z-10">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          {/* Tag de Apresentação */}
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-semibold text-cyan-300 mb-6 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-1" />
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Novo Lançamento Oficial • Windows 10 e Windows 11 (64-bit)</span>
           </div>
 
           {/* Título Principal de Alto Impacto */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight md:leading-none">
-            A Otimização Definitiva do Windows em <span className="text-transparent bg-clip-text glow-gradient">1 Único Clique</span>
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-[1.1]">
+            Acelere o seu Windows em{" "}
+            <span className="text-transparent bg-clip-text text-gradient-cyan">
+              1 Único Clique
+            </span>
           </h1>
 
-          <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Elimine gigabytes de caches residuais, remova gargalos na inicialização e recupere o tempo de resposta do seu sistema sem riscos de corrupção.
+          {/* Subtítulo Descritivo */}
+          <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            Otimizador profissional desenvolvido em C# e .NET 10. Limpeza profunda de resíduos,
+            calibração reversível de programas de inicialização e telemetria de hardware 100% real.
           </p>
 
-          {/* Botões Centrais de Chamada para Ação */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          {/* Botões de Ação do Hero */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={downloadUrl}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl glow-gradient text-black font-extrabold text-base hover:scale-105 transition duration-200 flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl glow-gradient text-black font-extrabold text-sm sm:text-base hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30 ring-1 ring-white/40"
             >
-              <Download className="w-5 h-5" />
-              <span>Baixar LSPKOptimizerSetup.exe</span>
+              <Download className="w-5 h-5 stroke-[2.5]" />
+              <span>Baixar LSPKOptimizerSetup.exe (120 MB)</span>
             </a>
-
             <a
-              href="#modulos"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#131B2E] hover:bg-[#1B253D] border border-slate-700 text-white font-semibold text-base transition flex items-center justify-center space-x-2"
+              href="#simulador"
+              className="w-full sm:w-auto px-7 py-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-sm sm:text-base transition-all flex items-center justify-center space-x-2"
             >
-              <Layers className="w-5 h-5 text-slate-400" />
-              <span>Explorar Funcionalidades</span>
+              <Play className="w-4 h-4 text-cyan-400" />
+              <span>Testar Simulador Interativo</span>
             </a>
           </div>
 
-          {/* Selos de Confiança Rápidos */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-medium">
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Windows 10 & 11 (x64)</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Instalação Segura sem UAC</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Zero Métricas Simuladas</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Atualizações Automáticas</span>
+          {/* Indicadores de Credibilidade Técnica */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
+            <div className="flex items-center space-x-1.5">
+              <ShieldCheck className="w-4 h-4 text-cyan-400" />
+              <span>Blindagem PathValidator</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <Lock className="w-4 h-4 text-cyan-400" />
+              <span>Sem Login ou Telemetria</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+              <span>Instalação sem Elevação UAC</span>
+            </div>
           </div>
 
-          {/* MOCKUP VISUAL INTERATIVO DO DASHBOARD DO APLICATIVO */}
-          <div className="mt-16 relative max-w-5xl mx-auto">
-            <div className="rounded-2xl border border-cyan-500/30 bg-[#131B2E] shadow-2xl shadow-cyan-950/50 p-4 md:p-6 text-left glow-cyan">
-              {/* Barra de Título Simulada da Janela */}
-              <div className="flex items-center justify-between pb-4 border-b border-[#1E293B] mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 rounded-md glow-gradient flex items-center justify-center text-black">
-                    <Zap className="w-3.5 h-3.5 fill-black text-black" />
+          {/* =========================================================================
+              SIMULADOR INTERATIVO AO VIVO DA INTERFACE WPF
+              ========================================================================= */}
+          <div id="simulador" className="mt-16 max-w-5xl mx-auto text-left">
+            <div className="text-center mb-4">
+              <span className="text-xs uppercase font-bold tracking-widest text-cyan-400">
+                Experimente Antes de Instalar
+              </span>
+              <p className="text-sm text-slate-400 mt-1">
+                Clique no botão central <strong>"OTIMIZAR AGORA"</strong> abaixo para ver a rotina em execução
+              </p>
+            </div>
+
+            {/* Janela Simulada com Moldura do Windows */}
+            <div className="rounded-2xl border border-cyan-500/30 bg-[#0B0F19] shadow-2xl shadow-cyan-950/50 overflow-hidden ring-1 ring-white/10 relative">
+              {/* Barra de Título do Windows */}
+              <div className="h-10 bg-[#070B14] border-b border-slate-800 px-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-4 h-4 rounded glow-gradient flex items-center justify-center">
+                    <Zap className="w-2.5 h-2.5 fill-black text-black stroke-[3]" />
                   </div>
-                  <span className="text-sm font-bold text-slate-200">LSPK OPTIMIZER</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800">v1.0.0</span>
+                  <span className="text-xs font-semibold text-slate-300">
+                    LSPK Optimizer — Painel de Controle de Performance (v1.0.0)
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-slate-700"></div>
-                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <span className="w-3 h-3 rounded-full bg-slate-700/80 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-slate-700/80 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-rose-500/70 inline-block" />
                 </div>
               </div>
 
-              {/* Grid Simulado de Telemetria de Hardware */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1E293B]">
-                  <div className="text-[10px] font-bold text-cyan-400">SISTEMA</div>
-                  <div className="text-sm font-bold text-white mt-1">Windows 11 Pro</div>
-                  <div className="text-xs text-slate-400">Build 22631 (x64)</div>
-                </div>
-                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1E293B]">
-                  <div className="text-[10px] font-bold text-cyan-400">PROCESSADOR</div>
-                  <div className="text-sm font-bold text-white mt-1">Intel Core / Ryzen</div>
-                  <div className="text-xs text-slate-400">16 Núcleos Lógicos</div>
-                </div>
-                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1E293B]">
-                  <div className="text-[10px] font-bold text-cyan-400">MEMÓRIA RAM</div>
-                  <div className="text-sm font-bold text-white mt-1">7.8 / 16.0 GB</div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2">
-                    <div className="bg-cyan-400 h-1.5 rounded-full w-[49%]"></div>
+              {/* Corpo da Janela do Aplicativo */}
+              <div className="p-6 sm:p-8 bg-gradient-to-b from-[#0F172A]/90 to-[#0B0F19]">
+                {/* Cartões de Telemetria de Hardware */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                  {/* SO */}
+                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Sistema Operacional</span>
+                    </div>
+                    <div className="text-sm font-bold text-white truncate">Windows 11 Pro</div>
+                    <div className="text-[11px] text-slate-400">Versão 22H2 (x64)</div>
                   </div>
-                </div>
-                <div className="p-4 rounded-xl bg-[#0B0F17] border border-[#1E293B]">
-                  <div className="text-[10px] font-bold text-cyan-400">DISCO (C:)</div>
-                  <div className="text-sm font-bold text-emerald-400 mt-1">142 GB livres</div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2">
-                    <div className="bg-emerald-500 h-1.5 rounded-full w-[65%]"></div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Banner Central com o Medidor de Saúde e Botão Principal */}
-              <div className="p-6 rounded-xl bg-[#0F1626] border border-cyan-500/40 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center space-x-6">
-                  <div className="w-20 h-20 rounded-full border-4 border-cyan-400 flex flex-col items-center justify-center bg-[#0B0F17]">
-                    <span className="text-2xl font-black text-cyan-400">92</span>
-                    <span className="text-[9px] uppercase font-bold text-slate-400">Score</span>
+                  {/* CPU */}
+                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
+                      <Cpu className="w-3.5 h-3.5" />
+                      <span>Processador</span>
+                    </div>
+                    <div className="text-sm font-bold text-white truncate">Intel Core i9-14900K</div>
+                    <div className="text-[11px] text-slate-400">32 Núcleos Lógicos</div>
                   </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white">Status do Sistema: Excelente</h4>
-                    <p className="text-xs text-slate-400 mt-1">Diagnóstico pronto: 3.4 GB de caches e 2 órfãos detectados.</p>
+
+                  {/* RAM */}
+                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Memória RAM</span>
+                    </div>
+                    <div className="text-sm font-bold text-white">6.4 / 32.0 GB</div>
+                    <div className="text-[11px] text-slate-400">20% em utilização</div>
+                  </div>
+
+                  {/* Disco */}
+                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
+                      <HardDrive className="w-3.5 h-3.5" />
+                      <span>Disco do Sistema</span>
+                    </div>
+                    <div className="text-sm font-bold text-white">342 GB Livres</div>
+                    <div className="text-[11px] text-slate-400">Capacidade: 953 GB (NVMe)</div>
                   </div>
                 </div>
-                <button className="px-6 py-3 rounded-xl glow-gradient text-black font-extrabold text-sm flex items-center space-x-2 shadow-lg shadow-cyan-500/20">
-                  <Zap className="w-4 h-4 fill-black" />
-                  <span>OTIMIZAR AGORA</span>
-                </button>
+
+                {/* Bloco Central do Simulador: Health Score e Botão Otimizar */}
+                <div className="p-8 rounded-2xl bg-[#131B2E]/90 border border-slate-700/80 flex flex-col items-center text-center relative overflow-hidden">
+                  {/* Indicador Circular de Saúde */}
+                  <div className="relative w-36 h-36 flex items-center justify-center mb-6">
+                    {/* Círculo de fundo */}
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        stroke="#1E293B"
+                        strokeWidth="8"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
+                        stroke={simScore > 80 ? "#10B981" : "#00F2FE"}
+                        strokeWidth="8"
+                        strokeDasharray={264}
+                        strokeDashoffset={264 - (264 * simScore) / 100}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-3xl font-extrabold text-white">{simScore}</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">de 100</span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    {simCompleted
+                      ? "Sistema Otimizado com Sucesso!"
+                      : simOptimizing
+                      ? "Otimização em Andamento..."
+                      : "Pontuação de Saúde Atual: 64/100"}
+                  </h3>
+
+                  <p className="text-xs text-slate-400 max-w-md mb-6">
+                    {simCompleted
+                      ? `Foram liberados ${simFreedMb} MB de resíduos e calibrados 5 itens de inicialização com segurança total.`
+                      : simOptimizing
+                      ? simSteps[simStep]
+                      : "Identificamos 4.2 GB de arquivos temporários e 5 inicializadores com impacto que podem ser desativados sem risco."}
+                  </p>
+
+                  {/* Barra de Progresso Real */}
+                  {simOptimizing && (
+                    <div className="w-full max-w-md mb-6">
+                      <div className="flex justify-between text-xs font-semibold text-slate-300 mb-2">
+                        <span>Etapa {simStep + 1} de 7</span>
+                        <span className="text-cyan-400">{simProgress}%</span>
+                      </div>
+                      <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div
+                          className="h-full glow-gradient transition-all duration-300 rounded-full"
+                          style={{ width: `${simProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ações do Simulador */}
+                  <div className="flex items-center space-x-3">
+                    {!simCompleted ? (
+                      <button
+                        onClick={handleStartSimulation}
+                        disabled={simOptimizing}
+                        className={`px-8 py-3.5 rounded-xl font-extrabold text-sm flex items-center space-x-2 transition-all shadow-lg ${
+                          simOptimizing
+                            ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                            : "glow-gradient text-black hover:scale-105 active:scale-95 shadow-cyan-500/30"
+                        }`}
+                      >
+                        {simOptimizing ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin text-slate-400" />
+                            <span>Otimizando PC...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4 fill-black text-black stroke-[3]" />
+                            <span>OTIMIZAR AGORA (Simular)</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleResetSimulation}
+                        className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-xs font-bold transition flex items-center space-x-2"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Testar Novamente</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -231,309 +498,622 @@ export default function App() {
       </section>
 
       {/* =========================================================================
-          2. SEÇÃO DE BENEFÍCIOS E DIFERENCIAIS
+          3. BARRA DE IMPACTO E NÚMEROS REAIS
           ========================================================================= */}
-      <section id="beneficios" className="py-24 border-t border-[#1E293B] bg-[#0E1424]">
+      <section className="py-12 border-y border-slate-800/80 bg-[#090D18]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">Diferenciais Técnicos</h2>
-            <p className="text-3xl font-extrabold text-white mt-2">Por que o LSPK Optimizer é diferente?</p>
-            <p className="text-slate-400 text-sm mt-3">Construído do zero para profissionais e usuários exigentes que recusam programas de manutenção suspeitos e cheios de propagandas.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="p-4">
+              <div className="text-3xl sm:text-4xl font-extrabold text-white text-gradient-cyan">
+                1 Clique
+              </div>
+              <div className="text-xs text-slate-400 font-medium mt-1">
+                Fluxo automático e completo de ponta a ponta
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl sm:text-4xl font-extrabold text-white">4.2+ GB</div>
+              <div className="text-xs text-slate-400 font-medium mt-1">
+                Média de espaço recuperado no primeiro escaneamento
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl sm:text-4xl font-extrabold text-emerald-400">100%</div>
+              <div className="text-xs text-slate-400 font-medium mt-1">
+                Reversibilidade total com backup de inicialização
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl sm:text-4xl font-extrabold text-cyan-400">0 Mocks</div>
+              <div className="text-xs text-slate-400 font-medium mt-1">
+                Sem telemetria oculta, sem banco remoto e sem login
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          4. SEÇÃO DE BENEFÍCIOS E DIFERENCIAIS DE ENGENHARIA
+          ========================================================================= */}
+      <section id="beneficios" className="py-24 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Diferenciais de Engenharia
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Por que o LSPK Optimizer é superior aos programas genéricos?
+            </p>
+            <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+              Desenvolvido pela LSPK Technology seguindo as diretrizes nativas do Windows, eliminando
+              o risco de quebrar o sistema operacional ou apagar arquivos pessoais.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B] hover:border-cyan-500/50 transition">
-              <div className="w-12 h-12 rounded-xl bg-cyan-950 flex items-center justify-center text-cyan-400 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Card 1 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
+                <Cpu className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Desempenho Nativo em C# .NET 10</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Sem Electron ou interfaces web empacotadas pesadas. O executável standalone consome
+                menos de 35 MB de RAM durante a execução e responde instantaneamente.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Zero Métricas Falsas</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Nenhuma barra de progresso simulada por temporizador ou espaço fictício. Cada byte calculado e liberado é aferido diretamente com as APIs do sistema de arquivos.
+              <h3 className="text-lg font-bold text-white mb-2">Blindagem PathValidator</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Algoritmo estrito de verificação de caminhos. Bloqueia qualquer tentativa de varredura
+                em Documentos, Downloads, Área de Trabalho ou diretórios vitais do Windows.
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B] hover:border-cyan-500/50 transition">
-              <div className="w-12 h-12 rounded-xl bg-emerald-950 flex items-center justify-center text-emerald-400 mb-6">
+            {/* Card 3 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
                 <RefreshCw className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Reversibilidade Garantida</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Todas as alterações de inicialização criam backups espelhados automáticos. Nada é deletado de forma destrutiva sem que você possa restaurar com 1 toque.
+              <h3 className="text-lg font-bold text-white mb-2">Inicialização Reversível</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Diferente de limpadores comuns que apagam registros, o LSPK Optimizer move as chaves
+                para chaves seguras de backup (Run-Disabled), permitindo reativar com 1 clique.
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B] hover:border-cyan-500/50 transition">
-              <div className="w-12 h-12 rounded-xl bg-blue-950 flex items-center justify-center text-blue-400 mb-6">
+            {/* Card 4 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
                 <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Segurança em Nível de Kernel</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Lista de proteção inviolável para serviços do Windows Defender, drivers de áudio/GPU e processos críticos do sistema. O software impede desativações perigosas.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          3. SEÇÃO DE FUNCIONAMENTO (PIPELINE DE 1 CLIQUE)
-          ========================================================================= */}
-      <section id="funcionamento" className="py-24 border-t border-[#1E293B] bg-[#0B0F17]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">Pipeline Inteligente</h2>
-            <p className="text-3xl font-extrabold text-white mt-2">Como Funciona o "Otimizar Agora"</p>
-            <p className="text-slate-400 text-sm mt-3">Um fluxo sequencial orquestrado em 9 etapas à prova de falhas.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="text-4xl font-black text-cyan-400 mb-4">01</div>
-              <h3 className="text-lg font-bold text-white mb-2">Diagnóstico Profundo</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                O aplicativo audita o hardware, varre caches do usuário e do Windows, identifica dumps de erro e lê todas as chaves de inicialização (HKCU, HKLM e Startup folders).
+              <h3 className="text-lg font-bold text-white mb-2">Instalação sem Elevação UAC</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Instala no escopo por usuário (%LocalAppData%\Programs\LSPK Optimizer). Você instala e
+                utiliza imediatamente sem exigir privilégios de administrador invasivos.
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="text-4xl font-black text-cyan-400 mb-4">02</div>
-              <h3 className="text-lg font-bold text-white mb-2">Limpeza com Whitelist</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Cada caminho de arquivo passa por validação estrita. Arquivos travados por processos em execução são ignorados pacificamente sem lançar erros críticos.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="text-4xl font-black text-cyan-400 mb-4">03</div>
-              <h3 className="text-lg font-bold text-white mb-2">Calibração e Relatório</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Resíduos órfãos de inicialização são desativados de modo reversível, os resultados são validados e um relatório com o ganho exato em megabytes é exibido.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          4. SEÇÃO DO MÓDULO 1: LIMPEZA DE ARQUIVOS
-          ========================================================================= */}
-      <section id="modulos" className="py-24 border-t border-[#1E293B] bg-[#0E1424]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-xs font-semibold text-cyan-400 mb-4">
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Módulo 1</span>
+            {/* Card 5 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
+                <Activity className="w-6 h-6" />
               </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                Limpeza Seletiva e Profunda de Arquivos Residuais
-              </h2>
-              <p className="mt-4 text-slate-300 text-sm md:text-base leading-relaxed">
-                Com o passar dos meses, o Windows acumula gigabytes de arquivos temporários, caches compilados de shaders e logs antigos de falhas que degradam a taxa de leitura e escrita do seu SSD.
+              <h3 className="text-lg font-bold text-white mb-2">Privacidade Offline Total</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Sem banco de dados remoto, sem criação de contas e sem envio de relatórios pela
+                internet. Toda a telemetria é processada localmente na sua máquina.
               </p>
+            </div>
 
-              <div className="mt-6 space-y-3">
-                {[
-                  "Temporários do Usuário (%TEMP%) e do Windows (%WINDIR%\\Temp)",
-                  "Cache de Miniaturas (thumbcache_*.db)",
-                  "Cache de Shaders GPU (DirectX, NVIDIA e AMD)",
-                  "Relatórios Antigos de Erros e Crash Dumps (WER)",
-                  "Cache Residual do Windows Update (SoftwareDistribution\\Download)",
-                  "Caches de Navegadores Homologados (Chrome, Edge, Brave)",
-                  "Lixeira do Windows com Confirmação Prévia"
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start space-x-3 text-sm text-slate-300">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                    <span>{item}</span>
+            {/* Card 6 */}
+            <div className="glass-panel p-8 rounded-2xl transition-all hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-6">
+                <Sliders className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Atualizador Atômico com Rollback</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Arquitetura desacoplada (LSPK.Optimizer.Updater.exe) com checagem SHA-256 e rollback
+                automático caso haja interrupção no download da atualização.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          5. COMO FUNCIONA (PIPELINE DE 9 ETAPAS EM 1 CLIQUE)
+          ========================================================================= */}
+      <section id="funcionamento" className="py-24 border-t border-slate-800/80 bg-[#090D18]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Funcionamento Transparente
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              O que o botão "OTIMIZAR AGORA" faz nos bastidores?
+            </p>
+            <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+              Cada etapa é executada de forma sequencial com acompanhamento em tempo real e
+              tratamento de exceções por arquivo. Uma falha individual nunca paralisa a rotina.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-[#0F172A]/70 border border-slate-800">
+              <div className="text-cyan-400 text-xs font-bold mb-2">FASE 1: DIAGNÓSTICO</div>
+              <h4 className="text-base font-bold text-white mb-2">Varredura e Auditoria</h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Varre %TEMP%, C:\Windows\Temp, thumbnail caches, shader caches e analisa as chaves de
+                registro de inicialização (HKCU e HKLM Run), identificando entradas órfãs.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0F172A]/70 border border-slate-800">
+              <div className="text-cyan-400 text-xs font-bold mb-2">FASE 2: BLINDAGEM E LIMPEZA</div>
+              <h4 className="text-base font-bold text-white mb-2">Exclusão Validada e Segura</h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Submete cada arquivo ao PathValidator. Remove resíduos confirmados, preservando
+                arquivos em uso e pastas protegidas. Libera a Lixeira via API nativa do Windows.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0F172A]/70 border border-slate-800">
+              <div className="text-cyan-400 text-xs font-bold mb-2">FASE 3: INICIALIZAÇÃO E RELATÓRIO</div>
+              <h4 className="text-base font-bold text-white mb-2">Ajuste Reversível e Métricas</h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Aplica backup das chaves de inicialização selecionadas. Protege antivírus e drivers
+                via SystemWhitelist e emite relatório com espaço e itens otimizados.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          6. SEÇÃO INTERATIVA DOS MÓDULOS (LIMPEZA vs INICIALIZAÇÃO)
+          ========================================================================= */}
+      <section id="modulos" className="py-24 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Módulos Especializados
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Controle granular sobre cada aspecto do seu PC
+            </p>
+            <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+              Além do botão de otimização automática, você pode acessar e calibrar cada módulo
+              individualmente. Experimente nos controles interativos abaixo:
+            </p>
+          </div>
+
+          {/* Seletor de Abas de Módulo */}
+          <div className="flex justify-center mb-10">
+            <div className="p-1 rounded-xl bg-slate-900 border border-slate-800 flex space-x-2">
+              <button
+                onClick={() => setActiveModuleTab("cleaner")}
+                className={`px-6 py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center space-x-2 transition-all ${
+                  activeModuleTab === "cleaner"
+                    ? "glow-gradient text-black shadow-lg shadow-cyan-500/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Módulo 1: Limpeza de Arquivos</span>
+              </button>
+              <button
+                onClick={() => setActiveModuleTab("startup")}
+                className={`px-6 py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center space-x-2 transition-all ${
+                  activeModuleTab === "startup"
+                    ? "glow-gradient text-black shadow-lg shadow-cyan-500/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>Módulo 2: Inicialização do Windows</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Conteúdo Interativo: Módulo 1 (Limpeza) */}
+          {activeModuleTab === "cleaner" && (
+            <div className="max-w-4xl mx-auto glass-panel p-6 sm:p-8 rounded-2xl border border-slate-700/80">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-800 gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                    <Trash2 className="w-5 h-5 text-cyan-400" />
+                    <span>Seletor de Categorias de Limpeza</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Marque ou desmarque as áreas para simular o cálculo dinâmico de liberação de disco
+                  </p>
+                </div>
+                <div className="text-right bg-slate-900/90 px-4 py-2 rounded-xl border border-cyan-500/30">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                    Espaço Selecionado
+                  </span>
+                  <span className="text-xl font-extrabold text-cyan-400">
+                    {(totalSelectedCleanMb / 1024).toFixed(2)} GB
+                  </span>
+                </div>
+              </div>
+
+              {/* Lista de Categorias Interativas */}
+              <div className="space-y-3">
+                {cleanCategories.map(cat => (
+                  <div
+                    key={cat.id}
+                    onClick={() => toggleCleanCategory(cat.id)}
+                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                      cat.selected
+                        ? "bg-slate-900/80 border-cyan-500/40 text-white"
+                        : "bg-slate-950/40 border-slate-800 text-slate-400 opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <div
+                        className={`w-5 h-5 rounded flex items-center justify-center border transition ${
+                          cat.selected
+                            ? "bg-cyan-500 border-cyan-400 text-black"
+                            : "border-slate-600 bg-slate-900"
+                        }`}
+                      >
+                        {cat.selected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">{cat.name}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{cat.path}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-slate-200">
+                        {cat.sizeMb > 1000
+                          ? `${(cat.sizeMb / 1024).toFixed(1)} GB`
+                          : `${cat.sizeMb} MB`}
+                      </span>
+                      <span className="block text-[10px] text-emerald-400 font-medium">
+                        Blindado por PathValidator
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <h4 className="text-base font-bold text-white mb-4">Regras de Blindagem do Limpador:</h4>
-              <ul className="space-y-4 text-sm text-slate-400">
-                <li className="flex items-start space-x-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-slate-200">Zero Exclusão Pessoal:</strong> Jamais toca em Documentos, Downloads, Fotos ou Músicas.</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-slate-200">Proteção de Arquivos Recentes:</strong> Arquivos com menos de 24 horas são preservados para não quebrar sessões ativas.</span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-slate-200">Tolerância a Bloqueios:</strong> Se um arquivo estiver em uso, o sistema ignora pacificamente sem interrupções.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          5. SEÇÃO DO MÓDULO 2: GERENCIAMENTO DE INICIALIZAÇÃO
-          ========================================================================= */}
-      <section className="py-24 border-t border-[#1E293B] bg-[#0B0F17]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1 p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="flex items-center justify-between pb-4 border-b border-[#1E293B] mb-4">
-                <span className="text-sm font-bold text-white">Fontes de Inicialização Auditadas</span>
-                <span className="text-xs text-cyan-400 font-semibold">100% Reversível</span>
-              </div>
-              <div className="space-y-3 text-xs text-slate-300">
-                <div className="p-3 rounded-lg bg-[#0B0F17] flex justify-between items-center">
-                  <span>HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run</span>
-                  <span className="text-cyan-400 font-mono">HKCU</span>
-                </div>
-                <div className="p-3 rounded-lg bg-[#0B0F17] flex justify-between items-center">
-                  <span>HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run</span>
-                  <span className="text-cyan-400 font-mono">HKLM 32/64</span>
-                </div>
-                <div className="p-3 rounded-lg bg-[#0B0F17] flex justify-between items-center">
-                  <span>%AppData%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup</span>
-                  <span className="text-cyan-400 font-mono">User Startup</span>
-                </div>
-                <div className="p-3 rounded-lg bg-[#0B0F17] flex justify-between items-center">
-                  <span>%ProgramData%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup</span>
-                  <span className="text-cyan-400 font-mono">Common Startup</span>
-                </div>
+              <div className="mt-6 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-xs text-cyan-300 flex items-start space-x-3">
+                <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Garantia de Integridade:</strong> O LSPK Optimizer nunca remove arquivos
+                  pessoais, downloads, documentos, fotos ou pastas de trabalho. Pastas raízes como
+                  C:\ e C:\Windows são protegidas por código inviolável.
+                </span>
               </div>
             </div>
+          )}
 
-            <div className="order-1 md:order-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-xs font-semibold text-cyan-400 mb-4">
-                <Rocket className="w-3.5 h-3.5" />
-                <span>Módulo 2</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                Gerenciamento Inteligente de Inicialização
-              </h2>
-              <p className="mt-4 text-slate-300 text-sm md:text-base leading-relaxed">
-                Descubra quais programas estão atrasando a inicialização do seu computador. O LSPK Optimizer identifica executáveis órfãos deixados por programas já desinstalados e permite desativá-los com segurança.
-              </p>
-
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center space-x-3 text-sm text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>Extração real de fabricante e metadados de assinatura.</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>Destaque visual para entradas órfãs (arquivos que não existem mais).</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>Backup automático das entradas de registro na chave da LSPK.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          6. SEÇÃO DE SEGURANÇA E FILOSOFIA DE PROTEÇÃO
-          ========================================================================= */}
-      <section id="seguranca" className="py-24 border-t border-[#1E293B] bg-[#0E1424]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">Engenharia Responsável</h2>
-            <p className="text-3xl font-extrabold text-white mt-2">Segurança em Primeiro Lugar</p>
-            <p className="text-slate-400 text-sm mt-3">Nosso compromisso inviolável com a estabilidade do seu sistema operacional.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="w-12 h-12 rounded-xl bg-emerald-950 flex items-center justify-center text-emerald-400 mb-4">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Proteção a Pastas Pessoais</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                O módulo PathValidator possui bloqueio a nível de código-fonte impedindo acesso a Documentos, Downloads e Desktop.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="w-12 h-12 rounded-xl bg-cyan-950 flex items-center justify-center text-cyan-400 mb-4">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Blindagem de Antivírus</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Windows Defender, Kaspersky, Bitdefender e outros softwares de segurança são blindados contra qualquer desativação.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="w-12 h-12 rounded-xl bg-blue-950 flex items-center justify-center text-blue-400 mb-4">
-                <Layers className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Backups Dedicados</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Entradas desativadas são armazenadas na chave do registro da LSPK, garantindo restauração instantânea.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          7. SEÇÃO DE COMPATIBILIDADE E REQUISITOS
-          ========================================================================= */}
-      <section id="compatibilidade" className="py-24 border-t border-[#1E293B] bg-[#0B0F17]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">Requisitos</h2>
-            <p className="text-3xl font-extrabold text-white mt-2">Compatibilidade Homologada</p>
-            <p className="text-slate-400 text-sm mt-3">Projetado e testado exclusivamente para o ecossistema moderno do Windows.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-cyan-500/40">
-              <div className="flex items-center space-x-4 mb-6">
-                <Monitor className="w-8 h-8 text-cyan-400" />
+          {/* Conteúdo Interativo: Módulo 2 (Inicialização) */}
+          {activeModuleTab === "startup" && (
+            <div className="max-w-4xl mx-auto glass-panel p-6 sm:p-8 rounded-2xl border border-slate-700/80">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-800 gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-white">Sistemas Operacionais Suportados</h3>
-                  <span className="text-xs text-slate-400">Totalmente compatível</span>
+                  <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                    <Clock className="w-5 h-5 text-cyan-400" />
+                    <span>Gerenciador Reversível de Inicialização</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Ative ou desative itens de inicialização sem apagar chaves do registro
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="text-right bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-700">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                      Programas Ativos
+                    </span>
+                    <span className="text-xl font-extrabold text-white">
+                      {activeStartupCount} de {startupItems.length}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <ul className="space-y-3 text-sm text-slate-300">
+
+              {/* Lista de Programas de Inicialização */}
+              <div className="space-y-3">
+                {startupItems.map(item => (
+                  <div
+                    key={item.id}
+                    className={`p-4 rounded-xl border transition-all flex items-center justify-between ${
+                      item.enabled
+                        ? "bg-slate-900/80 border-slate-700 text-white"
+                        : "bg-slate-950/60 border-slate-800 text-slate-400"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                          item.isSystemProtected
+                            ? "bg-emerald-950/70 border border-emerald-500/30 text-emerald-400"
+                            : item.isOrphan
+                            ? "bg-rose-950/70 border border-rose-500/30 text-rose-400"
+                            : "bg-slate-800 border border-slate-700 text-slate-300"
+                        }`}
+                      >
+                        {item.isSystemProtected ? (
+                          <Lock className="w-4 h-4" />
+                        ) : item.isOrphan ? (
+                          <AlertCircle className="w-4 h-4" />
+                        ) : (
+                          <Activity className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-semibold">{item.name}</span>
+                          {item.isSystemProtected && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-400">
+                              Protegido por Whitelist
+                            </span>
+                          )}
+                          {item.isOrphan && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950 border border-rose-500/30 text-rose-400">
+                              Executável Não Encontrado
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400">{item.publisher}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <span
+                          className={`text-xs font-bold ${
+                            item.impact === "Alto"
+                              ? "text-rose-400"
+                              : item.impact === "Médio"
+                              ? "text-amber-400"
+                              : "text-emerald-400"
+                          }`}
+                        >
+                          Impacto {item.impact}
+                        </span>
+                      </div>
+
+                      {/* Botão de Toggle */}
+                      {item.isSystemProtected ? (
+                        <div
+                          title="Componentes essenciais e antivírus não podem ser desativados"
+                          className="w-12 h-6 rounded-full bg-emerald-950/60 border border-emerald-500/40 flex items-center px-1 cursor-not-allowed"
+                        >
+                          <div className="w-4 h-4 rounded-full bg-emerald-400 ml-auto" />
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => toggleStartupItem(item.id)}
+                          className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${
+                            item.enabled
+                              ? "bg-cyan-500 justify-end"
+                              : "bg-slate-800 border border-slate-700 justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-full transition-all ${
+                              item.enabled ? "bg-black" : "bg-slate-400"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-start space-x-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Backup Reversível:</strong> Desativar um aplicativo move seu comando para
+                  a subchave <code>Software\Microsoft\Windows\CurrentVersion\Run-Disabled</code>.
+                  Você pode reativá-lo com segurança a qualquer momento sem perder o caminho original.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* =========================================================================
+          7. SEÇÃO DE SEGURANÇA E MATRIZ COMPARATIVA
+          ========================================================================= */}
+      <section id="seguranca" className="py-24 border-t border-slate-800/80 bg-[#090D18]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Segurança e Transparência
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              LSPK Optimizer vs. Softwares Genéricos
+            </p>
+            <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+              Veja a diferença técnica entre a abordagem profissional da LSPK Technology e os
+              programas tradicionais de manutenção que colocam seu Windows em risco.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto rounded-2xl border border-slate-800 bg-[#0B0F19] overflow-hidden shadow-xl">
+            <div className="grid grid-cols-12 bg-slate-900/90 border-b border-slate-800 p-4 text-xs font-bold text-slate-300">
+              <div className="col-span-6 sm:col-span-6">Critério de Segurança e Arquitetura</div>
+              <div className="col-span-3 sm:col-span-3 text-center text-cyan-400">LSPK Optimizer</div>
+              <div className="col-span-3 sm:col-span-3 text-center text-slate-500">Programas Genéricos</div>
+            </div>
+
+            <div className="divide-y divide-slate-800/60 text-xs">
+              {/* Linha 1 */}
+              <div className="grid grid-cols-12 p-4 items-center">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Proteção de Arquivos Pessoais (Fotos, Documentos, Downloads)
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Blindado por Código</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Risco de Perda</span>
+                </div>
+              </div>
+
+              {/* Linha 2 */}
+              <div className="grid grid-cols-12 p-4 items-center bg-slate-900/30">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Backup Automático antes de Modificar Registros
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Reversível (Run-Disabled)</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Apaga Permanentemente</span>
+                </div>
+              </div>
+
+              {/* Linha 3 */}
+              <div className="grid grid-cols-12 p-4 items-center">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Proteção Obrigatória de Antivírus e Drivers Vitais
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>SystemWhitelist Ativa</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Desativa sem Critério</span>
+                </div>
+              </div>
+
+              {/* Linha 4 */}
+              <div className="grid grid-cols-12 p-4 items-center bg-slate-900/30">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Instalação Limpa sem Pedir Elevação de Administrador (UAC)
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Escopo por Usuário</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Exige UAC Obrigatório</span>
+                </div>
+              </div>
+
+              {/* Linha 5 */}
+              <div className="grid grid-cols-12 p-4 items-center">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Privacidade Local (Sem Banco Remoto, Telemetria ou Login)
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>100% Offline e Local</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Coleta Dados na Nuvem</span>
+                </div>
+              </div>
+
+              {/* Linha 6 */}
+              <div className="grid grid-cols-12 p-4 items-center bg-slate-900/30">
+                <div className="col-span-6 font-semibold text-slate-200">
+                  Adware, Barras Ocultas ou Ofertas de Terceiros
+                </div>
+                <div className="col-span-3 text-center text-emerald-400 font-bold flex items-center justify-center space-x-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Zero Bloatware</span>
+                </div>
+                <div className="col-span-3 text-center text-rose-400 font-medium flex items-center justify-center space-x-1">
+                  <XCircle className="w-4 h-4" />
+                  <span>Frequentemente Embutido</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          8. SEÇÃO DE COMPATIBILIDADE E REQUISITOS DO SISTEMA
+          ========================================================================= */}
+      <section id="compatibilidade" className="py-24 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Compatibilidade
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Pronto para as versões modernas do Windows
+            </p>
+            <p className="mt-4 text-sm text-slate-400 leading-relaxed">
+              Projetado e homologado para sistemas operacionais de 64 bits da Microsoft.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Windows 11 */}
+            <div className="p-8 rounded-2xl glass-panel border border-slate-700/80">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Windows 11 (64-bit)</h3>
+                  <span className="text-xs text-emerald-400 font-semibold">100% Compatível e Otimizado</span>
+                </div>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Windows 11 (todas as edições x64)</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Versões 21H2, 22H2, 23H2 e 24H2 suportadas</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Windows 10 versão 22H2 ou superior (x64)</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Suporte completo ao novo Gerenciador de Tarefas</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Arquitetura x64 nativa</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Otimização para arquiteturas com núcleos híbridos (P/E cores)</span>
                 </li>
               </ul>
             </div>
 
-            <div className="p-8 rounded-2xl bg-[#131B2E] border border-[#1E293B]">
-              <div className="flex items-center space-x-4 mb-6">
-                <Cpu className="w-8 h-8 text-slate-400" />
+            {/* Windows 10 */}
+            <div className="p-8 rounded-2xl glass-panel border border-slate-700/80">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Requisitos de Hardware</h3>
-                  <span className="text-xs text-slate-400">Leve e eficiente</span>
+                  <h3 className="text-lg font-bold text-white">Windows 10 (64-bit)</h3>
+                  <span className="text-xs text-emerald-400 font-semibold">100% Compatível</span>
                 </div>
               </div>
-              <ul className="space-y-3 text-sm text-slate-300">
+              <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>Processador 1.0 GHz ou superior</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Versão 22H2 (Build 19045) ou superior</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>100 MB de memória RAM livre</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Limpeza profunda de registros de atualização e crash dumps</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                  <span>50 MB de espaço em disco para instalação</span>
+                  <Check className="w-4 h-4 text-cyan-400" />
+                  <span>Requisitos mínimos: 1.0 GHz CPU, 100 MB RAM livre</span>
                 </li>
               </ul>
             </div>
@@ -542,30 +1122,59 @@ export default function App() {
       </section>
 
       {/* =========================================================================
-          8. SEÇÃO DE PERGUNTAS FREQUENTES (FAQ)
+          9. PERGUNTAS FREQUENTES (FAQ COM ACORDEÃO ANIMADO)
           ========================================================================= */}
-      <section id="faq" className="py-24 border-t border-[#1E293B] bg-[#0E1424]">
+      <section id="faq" className="py-24 border-t border-slate-800/80 bg-[#090D18]">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">Dúvidas Frequentes</h2>
-            <p className="text-3xl font-extrabold text-white mt-2">Perguntas e Respostas</p>
+            <h2 className="text-xs font-bold text-cyan-400 tracking-wider uppercase">
+              Tire suas Dúvidas
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Perguntas Frequentes
+            </p>
           </div>
 
           <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div 
+            {[
+              {
+                q: "O LSPK Optimizer apaga meus arquivos pessoais ou documentos?",
+                a: "Nunca. O LSPK Optimizer possui uma política rigorosa de segurança em nível de código (Path Whitelist). Pastas como Documentos, Downloads, Área de Trabalho, Imagens e Músicas são estritamente blindadas contra qualquer tipo de varredura ou exclusão."
+              },
+              {
+                q: "Preciso de privilégios de Administrador (UAC) para instalar?",
+                a: "Não para a instalação padrão. O instalador personalizado foi projetado para instalar no escopo do usuário (%LocalAppData%\\Programs\\LSPK Optimizer), permitindo uso imediato sem alertas intrusivos de elevação."
+              },
+              {
+                q: "O que acontece ao desativar um programa de inicialização?",
+                a: "Diferente de ferramentas genéricas, o LSPK Optimizer nunca deleta chaves permanentemente. Ele realiza backup automático em chaves dedicadas (Run-Disabled), permitindo que você reative o programa a qualquer momento com um único clique."
+              },
+              {
+                q: "Como funcionam as atualizações automáticas?",
+                a: "Ao abrir o aplicativo, uma consulta silenciosa verifica se há nova versão estável disponível. Caso haja, o pacote é baixado em segundo plano e validado com criptografia SHA-256. Você é notificado por um banner discreto para aplicar quando for conveniente."
+              },
+              {
+                q: "Existe alguma telemetria remota ou envio de dados?",
+                a: "Zero. O MVP do LSPK Optimizer opera 100% offline no seu computador. Não há criação de contas, logins, rastreadores ou bancos de dados remotos coletando informações dos seus hábitos ou hardware."
+              }
+            ].map((faq, index) => (
+              <div
                 key={index}
-                className="rounded-xl bg-[#131B2E] border border-[#1E293B] overflow-hidden transition"
+                className="rounded-xl bg-slate-900/70 border border-slate-800 overflow-hidden transition"
               >
                 <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full p-6 text-left flex items-center justify-between font-semibold text-white text-base hover:text-cyan-400 transition"
+                  onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+                  className="w-full p-6 text-left flex items-center justify-between font-semibold text-white text-sm sm:text-base hover:text-cyan-400 transition"
                 >
                   <span>{faq.q}</span>
-                  {activeFaq === index ? <ChevronUp className="w-5 h-5 text-cyan-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                  <ChevronDown
+                    className={`w-5 h-5 text-cyan-400 transition-transform duration-300 ${
+                      activeFaq === index ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
                 {activeFaq === index && (
-                  <div className="px-6 pb-6 text-sm text-slate-300 border-t border-[#1E293B] pt-4 leading-relaxed">
+                  <div className="px-6 pb-6 text-xs sm:text-sm text-slate-300 border-t border-slate-800/80 pt-4 leading-relaxed">
                     {faq.a}
                   </div>
                 )}
@@ -576,46 +1185,65 @@ export default function App() {
       </section>
 
       {/* =========================================================================
-          CHAMADA PARA AÇÃO FINAL ANTES DO RODAPÉ
+          10. CALL-TO-ACTION FINAL COM ALTO IMPACTO
           ========================================================================= */}
-      <section className="py-20 border-t border-[#1E293B] bg-gradient-to-b from-[#0E1424] to-[#0B0F17]">
+      <section className="py-24 border-t border-slate-800/80 bg-gradient-to-b from-[#090D18] to-[#070B14] relative">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white">
-            Pronto para recuperar a velocidade do seu Windows?
+          <div className="w-16 h-16 rounded-2xl glow-gradient flex items-center justify-center text-black mx-auto mb-6 shadow-xl shadow-cyan-500/25 ring-1 ring-white/30">
+            <Zap className="w-8 h-8 fill-black text-black stroke-[3]" />
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+            Recupere o Desempenho Máximo do seu Windows
           </h2>
-          <p className="mt-4 text-slate-400 text-base max-w-xl mx-auto">
-            Baixe o instalador oficial agora mesmo. Instalação rápida, limpa e sem complicação.
+
+          <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Instalação limpa, sem anúncios e sem cadastro. Baixe agora o executável oficial de 120 MB
+            compilado para Windows 10 e Windows 11.
           </p>
-          <div className="mt-8 flex justify-center">
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={downloadUrl}
-              className="px-10 py-4 rounded-xl glow-gradient text-black font-extrabold text-base hover:scale-105 transition flex items-center space-x-3 shadow-xl shadow-cyan-500/30"
+              className="w-full sm:w-auto px-10 py-4 rounded-xl glow-gradient text-black font-extrabold text-base hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30 ring-1 ring-white/40"
             >
-              <Download className="w-5 h-5" />
-              <span>Baixar LSPKOptimizerSetup.exe (MVP)</span>
+              <Download className="w-5 h-5 stroke-[2.5]" />
+              <span>Baixar LSPKOptimizerSetup.exe (v1.0.0)</span>
+            </a>
+            <a
+              href="https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/tag/v1.0.0"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-sm transition flex items-center justify-center space-x-2"
+            >
+              <ExternalLink className="w-4 h-4 text-cyan-400" />
+              <span>Ver no GitHub Releases</span>
             </a>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          9. RODAPÉ INSTITUCIONAL COM COPYRIGHT E TERMOS
+          11. RODAPÉ INSTITUCIONAL DA LSPK TECHNOLOGY
           ========================================================================= */}
-      <footer className="py-12 border-t border-[#1E293B] bg-[#070A10] text-slate-400 text-xs">
+      <footer className="py-12 border-t border-slate-800/80 bg-[#05070D] text-slate-400 text-xs">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center space-x-3">
             <div className="w-7 h-7 rounded-lg glow-gradient flex items-center justify-center text-black">
-              <Zap className="w-4 h-4 fill-black text-black" />
+              <Zap className="w-4 h-4 fill-black text-black stroke-[3]" />
             </div>
             <div>
-              <span className="font-bold text-slate-200">LSPK OPTIMIZER</span> — Um produto da <strong className="text-white">LSPK Technology</strong>
+              <span className="font-bold text-slate-200">LSPK OPTIMIZER</span> — Um produto oficial da{" "}
+              <strong className="text-white">LSPK Technology</strong>
             </div>
           </div>
 
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-slate-400">
             <span>Privacidade Local Garantida</span>
             <span>•</span>
             <span>Sem Banco Remoto</span>
+            <span>•</span>
+            <span>Zero Bloatware</span>
             <span>•</span>
             <span>SHA-256 Verificado</span>
           </div>

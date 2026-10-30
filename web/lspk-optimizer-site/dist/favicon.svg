@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="#0B0F17"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="#00E5FF" stroke-opacity="0.3"/>
+  <path d="M17.5 4L7 17H15L14.5 28L25 15H17L17.5 4Z" fill="url(#lspk_grad)" stroke="#00E5FF" stroke-width="0.5"/>
+  <defs>
+    <linearGradient id="lspk_grad" x1="7" y1="4" x2="25" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00E5FF"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+</svg>
