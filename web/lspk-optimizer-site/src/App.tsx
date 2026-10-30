@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Sliders,
   Check,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 
 /**
@@ -61,6 +62,30 @@ export default function App() {
 
   // Controle de FAQ expandido
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  // Controle de modal de download e instruções para o usuário
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  /**
+   * Dispara o download de forma confiável e abre o modal com links e orientações.
+   */
+  const handleDownload = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setShowDownloadModal(true);
+
+    try {
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "LSPKOptimizerSetup.exe";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      window.open(downloadUrl, "_blank");
+    }
+  };
 
   // Aba ativa na seção de módulos interativos (limpeza ou inicialização)
   const [activeModuleTab, setActiveModuleTab] = useState<"cleaner" | "startup">("cleaner");
@@ -245,6 +270,9 @@ export default function App() {
             </a>
             <a
               href={downloadUrl}
+              onClick={handleDownload}
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-xl glow-gradient font-bold text-black text-xs sm:text-sm hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center space-x-2 shadow-lg shadow-cyan-500/25 ring-1 ring-white/30"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
@@ -259,13 +287,6 @@ export default function App() {
           ========================================================================= */}
       <section className="relative pt-16 pb-24 z-10">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          {/* Tag de Apresentação */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-semibold text-cyan-300 mb-6 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping mr-1" />
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Novo Lançamento Oficial • Windows 10 e Windows 11 (64-bit)</span>
-          </div>
-
           {/* Título Principal de Alto Impacto */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-[1.1]">
             Acelere o seu Windows em{" "}
@@ -284,6 +305,9 @@ export default function App() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={downloadUrl}
+              onClick={handleDownload}
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full sm:w-auto px-8 py-4 rounded-xl glow-gradient text-black font-extrabold text-sm sm:text-base hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30 ring-1 ring-white/40"
             >
               <Download className="w-5 h-5 stroke-[2.5]" />
@@ -1205,6 +1229,9 @@ export default function App() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={downloadUrl}
+              onClick={handleDownload}
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full sm:w-auto px-10 py-4 rounded-xl glow-gradient text-black font-extrabold text-base hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30 ring-1 ring-white/40"
             >
               <Download className="w-5 h-5 stroke-[2.5]" />
@@ -1253,6 +1280,72 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* =========================================================================
+          12. MODAL INFORMATIVO DE DOWNLOAD
+          ========================================================================= */}
+      {showDownloadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-lg p-6 sm:p-8 rounded-2xl bg-[#0B0F19] border border-cyan-500/40 shadow-2xl shadow-cyan-950/60 ring-1 ring-white/10">
+            {/* Botão Fechar */}
+            <button
+              onClick={() => setShowDownloadModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Cabeçalho do Modal */}
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 rounded-xl glow-gradient flex items-center justify-center text-black">
+                <Download className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Download em Andamento</h3>
+                <span className="text-xs text-cyan-400 font-semibold">LSPKOptimizerSetup.exe (120.2 MB)</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+              O instalador oficial está sendo transferido pelo seu navegador. Caso o download não tenha iniciado automaticamente, utilize os links diretos abaixo:
+            </p>
+
+            {/* Botões de Ação Direta */}
+            <div className="space-y-3 mb-6">
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-4 rounded-xl glow-gradient text-black font-extrabold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:opacity-95 transition"
+              >
+                <Download className="w-4 h-4 stroke-[2.5]" />
+                <span>Clique aqui para Baixar Novamente</span>
+              </a>
+
+              <a
+                href="https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/tag/v1.0.0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Abrir Página de Releases no GitHub</span>
+              </a>
+            </div>
+
+            {/* Aviso Técnico do Windows Defender / SmartScreen */}
+            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300">
+              <div className="flex items-center space-x-2 font-bold text-amber-400 mb-1">
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <span>Dica de Instalação no Windows 10 e Windows 11:</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Por se tratar de um executável independente recém-compilado (MVP v1.0.0), seu navegador (Edge ou Chrome) pode exibir uma confirmação na barra de downloads. Basta clicar em <strong>"Manter"</strong> ou <strong>"Salvar"</strong>. Nosso código é 100% aberto, sem telemetria oculta e auditável.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
