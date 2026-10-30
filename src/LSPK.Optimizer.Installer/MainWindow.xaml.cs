@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using LSPK.Optimizer.Core.Models;
 using LSPK.Optimizer.Installer.Services;
 
 namespace LSPK.Optimizer.Installer;
