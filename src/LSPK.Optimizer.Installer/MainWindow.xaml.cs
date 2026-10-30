@@ -42,7 +42,7 @@ public partial class MainWindow : Window
                 TxtStepDetail.Text = p.StatusDescription;
                 PrgInstall.Value = p.Percent;
                 TxtFilesProgress.Text = $"{p.FilesExtracted} / {p.TotalFiles} arquivos processados";
-                TxtBytesProgress.Text = $"{JunkCategoryScanResult.FormatBytes(p.BytesWritten)} / {JunkCategoryScanResult.FormatBytes(p.TotalBytes)}";
+                TxtBytesProgress.Text = $"{InstallationService.FormatBytes(p.BytesWritten)} / {InstallationService.FormatBytes(p.TotalBytes)}";
             });
         });
 
