@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Input;
 using LSPK.Optimizer.Installer.Services;
 
 namespace LSPK.Optimizer.Installer;
@@ -19,6 +20,18 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         TxtInstallPath.Text = InstallationService.DefaultInstallPath;
+    }
+
+    /// <summary>
+    /// Permite arrastar a janela livremente ao clicar e segurar o botão esquerdo do mouse.
+    /// Funciona perfeitamente com WindowChrome sem necessidade de transparência de janela legada.
+    /// </summary>
+    private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left)
+        {
+            DragMove();
+        }
     }
 
     /// <summary>
@@ -62,8 +75,15 @@ public partial class MainWindow : Window
         }
         else
         {
-            MessageBox.Show("Ocorreu uma falha durante a instalação.", "Erro no Instalador", MessageBoxButton.OK, MessageBoxImage.Error);
-            Close();
+            string errorMsg = string.IsNullOrWhiteSpace(InstallationService.LastError)
+                ? "Ocorreu uma falha durante a instalação."
+                : $"Falha durante a instalação:\n{InstallationService.LastError}";
+
+            MessageBox.Show(errorMsg, "Erro no Instalador - LSPK Optimizer", MessageBoxButton.OK, MessageBoxImage.Error);
+            BtnCancel.IsEnabled = true;
+            StepInstalling.Visibility = Visibility.Collapsed;
+            StepWelcome.Visibility = Visibility.Visible;
+            BtnInstall.Visibility = Visibility.Visible;
         }
     }
 

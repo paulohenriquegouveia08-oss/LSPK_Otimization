@@ -57,7 +57,7 @@ interface StartupItem {
  * matriz de segurança e animações fluidas.
  */
 export default function App() {
-  // Link oficial de download direto do executável no GitHub Releases (120 MB binário compilado Windows x64)
+  // Link oficial de download direto do executável no GitHub Releases
   const downloadUrl = "https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/download/v1.0.0/LSPKOptimizerSetup.exe";
 
   // Controle de FAQ expandido
@@ -311,7 +311,7 @@ export default function App() {
               className="w-full sm:w-auto px-8 py-4 rounded-xl glow-gradient text-black font-extrabold text-sm sm:text-base hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3 shadow-xl shadow-cyan-500/30 ring-1 ring-white/40"
             >
               <Download className="w-5 h-5 stroke-[2.5]" />
-              <span>Baixar LSPKOptimizerSetup.exe (120 MB)</span>
+              <span>Baixar LSPKOptimizerSetup.exe</span>
             </a>
             <a
               href="#simulador"
@@ -1222,7 +1222,7 @@ export default function App() {
           </h2>
 
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
-            Instalação limpa, sem anúncios e sem cadastro. Baixe agora o executável oficial de 120 MB
+            Instalação rápida, sem anúncios e sem cadastro. Baixe agora o executável oficial otimizado
             compilado para Windows 10 e Windows 11.
           </p>
 
@@ -1301,13 +1301,13 @@ export default function App() {
                 <Download className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Download em Andamento</h3>
-                <span className="text-xs text-cyan-400 font-semibold">LSPKOptimizerSetup.exe (120.2 MB)</span>
+                <h3 className="text-lg font-bold text-white">Download Oficial</h3>
+                <span className="text-xs text-cyan-400 font-semibold">LSPKOptimizerSetup.exe (Instalador Otimizado)</span>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed mb-6">
-              O instalador oficial está sendo transferido pelo seu navegador. Caso o download não tenha iniciado automaticamente, utilize os links diretos abaixo:
+              O instalador oficial está sendo transferido pelo seu navegador. Você também pode optar pelo formato portátil sem instalação:
             </p>
 
             {/* Botões de Ação Direta */}
@@ -1319,28 +1319,38 @@ export default function App() {
                 className="w-full py-3.5 px-4 rounded-xl glow-gradient text-black font-extrabold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/25 hover:opacity-95 transition"
               >
                 <Download className="w-4 h-4 stroke-[2.5]" />
-                <span>Clique aqui para Baixar Novamente</span>
+                <span>Baixar Instalador Oficial (.exe)</span>
+              </a>
+
+              <a
+                href="https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/download/v1.0.0/LSPKOptimizer-Portable.zip"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition"
+              >
+                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Baixar Versão Portátil (.zip — Sem Instalação)</span>
               </a>
 
               <a
                 href="https://github.com/paulohenriquegouveia08-oss/LSPK_Otimization/releases/tag/v1.0.0"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-950/70 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs flex items-center justify-center space-x-2 transition"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Abrir Página de Releases no GitHub</span>
+                <span>Ver Releases e Checksums no GitHub</span>
               </a>
             </div>
 
             {/* Aviso Técnico do Windows Defender / SmartScreen */}
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300">
-              <div className="flex items-center space-x-2 font-bold text-amber-400 mb-1">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span>Dica de Instalação no Windows 10 e Windows 11:</span>
+              <div className="flex items-center space-x-2 font-bold text-cyan-400 mb-1">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>Dica de Execução no Windows 10 e Windows 11:</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Por se tratar de um executável independente recém-compilado (MVP v1.0.0), seu navegador (Edge ou Chrome) pode exibir uma confirmação na barra de downloads. Basta clicar em <strong>"Manter"</strong> ou <strong>"Salvar"</strong>. Nosso código é 100% aberto, sem telemetria oculta e auditável.
+                Se o Windows SmartScreen exibir a tela azul <em>"O Windows protegeu o seu computador"</em> (padrão para novos lançamentos na web): clique em <strong>"Mais informações"</strong> e em seguida em <strong>"Executar assim mesmo"</strong>. O instalador moderno abrirá imediatamente sem solicitar permissões invasivas de administrador.
               </p>
             </div>
           </div>

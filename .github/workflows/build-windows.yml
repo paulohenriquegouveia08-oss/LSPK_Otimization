@@ -28,15 +28,51 @@ jobs:
 
       - name: Publish LSPK Optimizer App (Windows Desktop x64)
         run: |
-          dotnet publish src/LSPK.Optimizer.App/LSPK.Optimizer.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/app
-
-      - name: Publish Standalone Setup Installer (LSPKOptimizerSetup.exe)
-        run: |
-          dotnet publish src/LSPK.Optimizer.Installer/LSPK.Optimizer.Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/installer
+          dotnet publish src/LSPK.Optimizer.App/LSPK.Optimizer.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish/app
 
       - name: Publish Independent Updater (LSPK.Optimizer.Updater.exe)
         run: |
-          dotnet publish src/LSPK.Optimizer.Updater/LSPK.Optimizer.Updater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/updater
+          dotnet publish src/LSPK.Optimizer.Updater/LSPK.Optimizer.Updater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish/updater
+
+      - name: Bundle Payload for Installer
+        shell: pwsh
+        run: |
+          # Compacta os binarios da aplicacao e do atualizador em um arquivo payload.zip embutido
+          New-Item -ItemType Directory -Force -Path ./src/LSPK.Optimizer.Installer
+          Compress-Archive -Path ./publish/app/*, ./publish/updater/* -DestinationPath ./src/LSPK.Optimizer.Installer/payload.zip -CompressionLevel Optimal -Force
+          Write-Host "Tamanho do payload.zip gerado:"
+          Get-Item ./src/LSPK.Optimizer.Installer/payload.zip | Select-Object Name, Length
+
+      - name: Publish Standalone Setup Installer (LSPKOptimizerSetup.exe)
+        run: |
+          dotnet publish src/LSPK.Optimizer.Installer/LSPK.Optimizer.Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish/installer
+
+      - name: Create Portable Zip Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/app/*, ./publish/updater/* -DestinationPath ./publish/installer/LSPKOptimizer-Portable.zip -CompressionLevel Optimal -Force
+          Write-Host "Tamanho do pacote portatil:"
+          Get-Item ./publish/installer/LSPKOptimizer-Portable.zip | Select-Object Name, Length
+
+      - name: Code Sign Binaries with Authenticode (LSPK Technology)
+        shell: pwsh
+        run: |
+          # Cria certificado para assinatura digital Authenticode com metadados da LSPK Technology
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=LSPK Technology, O=LSPK Technology, C=BR" -KeyAlgorithm RSA -KeyLength 2048 -CertStoreLocation "Cert:\CurrentUser\My" -NotAfter (Get-Date).AddYears(5)
+          
+          $timestampUrl = "http://timestamp.digicert.com"
+          
+          Write-Host "Assinando LSPKOptimizerSetup.exe..."
+          Set-AuthenticodeSignature -FilePath ./publish/installer/LSPKOptimizerSetup.exe -Certificate $cert -TimestampServer $timestampUrl -HashAlgorithm SHA256
+          
+          Write-Host "Assinando LSPK.Optimizer.App.exe..."
+          Set-AuthenticodeSignature -FilePath ./publish/app/LSPK.Optimizer.App.exe -Certificate $cert -TimestampServer $timestampUrl -HashAlgorithm SHA256
+          
+          Write-Host "Assinando LSPK.Optimizer.Updater.exe..."
+          Set-AuthenticodeSignature -FilePath ./publish/updater/LSPK.Optimizer.Updater.exe -Certificate $cert -TimestampServer $timestampUrl -HashAlgorithm SHA256
+          
+          # Exporta o certificado publico para inspecao
+          Export-Certificate -Cert $cert -FilePath ./publish/installer/LSPK-Technology.cer
 
       - name: Upload Windows Binaries Artifacts
         uses: actions/upload-artifact@v4
@@ -44,6 +80,8 @@ jobs:
           name: LSPK-Optimizer-Windows-x64
           path: |
             ./publish/installer/LSPKOptimizerSetup.exe
+            ./publish/installer/LSPKOptimizer-Portable.zip
+            ./publish/installer/LSPK-Technology.cer
             ./publish/app/
             ./publish/updater/
 
@@ -51,4 +89,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.0.0 ./publish/installer/LSPKOptimizerSetup.exe --clobber
+          gh release upload v1.0.0 ./publish/installer/LSPKOptimizerSetup.exe ./publish/installer/LSPKOptimizer-Portable.zip ./publish/installer/LSPK-Technology.cer --clobber

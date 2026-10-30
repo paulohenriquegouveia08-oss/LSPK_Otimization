@@ -46,6 +46,9 @@ public class InstallationService
     /// <summary>Chave de desinstalação registrada no Windows Add/Remove Programs (escopo de usuário HKCU).</summary>
     private const string UninstallRegistryKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\LSPKOptimizer";
 
+    /// <summary>Armazena a última mensagem de erro ocorrida durante a instalação para exibição na UI.</summary>
+    public static string? LastError { get; private set; }
+
     /// <summary>
     /// Converte um valor numérico em bytes para uma representação legível (B, KB, MB, GB, TB).
     /// </summary>
@@ -72,6 +75,7 @@ public class InstallationService
         IProgress<InstallProgress>? progress = null,
         CancellationToken ct = default)
     {
+        LastError = null;
         return await Task.Run(() =>
         {
             try
@@ -82,8 +86,16 @@ public class InstallationService
                 using var payloadStream = GetPayloadStream();
                 if (payloadStream == null)
                 {
-                    // Caso não haja arquivo ZIP embutido, copia os arquivos da pasta de distribuição
-                    CopyLocalFilesWithProgress(AppDomain.CurrentDomain.BaseDirectory, targetDirectory, progress, ct);
+                    // Caso não haja payload embutido, verifica se os executáveis estão disponíveis localmente
+                    string localAppExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LSPK.Optimizer.App.exe");
+                    if (File.Exists(localAppExe))
+                    {
+                        CopyLocalFilesWithProgress(AppDomain.CurrentDomain.BaseDirectory, targetDirectory, progress, ct);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException("Arquivo de dados da instalação (payload.zip) não encontrado no pacote do instalador.");
+                    }
                 }
                 else
                 {
@@ -110,8 +122,9 @@ public class InstallationService
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                LastError = ex.Message;
                 return false;
             }
         }, ct);

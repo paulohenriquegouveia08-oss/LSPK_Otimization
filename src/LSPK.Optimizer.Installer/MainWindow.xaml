@@ -6,8 +6,17 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent">
+        Background="#0B0F17"
+        MouseLeftButtonDown="Window_MouseDown">
+
+    <!-- Configuração de WindowChrome para visual moderno sem bordas padrão e sem bugs de transparência D3D -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="48"
+                      CornerRadius="16"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
 
     <Border Background="{StaticResource BrushSurface}"
             BorderBrush="{StaticResource BrushCyan}"

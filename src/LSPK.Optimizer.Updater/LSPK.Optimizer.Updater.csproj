@@ -11,6 +11,8 @@
     <Company>LSPK Technology</Company>
     <Product>LSPK Optimizer Updater</Product>
     <Description>Atomic Update and Rollback Engine for LSPK Optimizer</Description>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>

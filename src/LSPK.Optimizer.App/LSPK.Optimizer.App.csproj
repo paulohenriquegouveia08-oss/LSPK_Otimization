@@ -13,6 +13,8 @@
     <Company>LSPK Technology</Company>
     <Product>LSPK Optimizer</Product>
     <Description>LSPK Optimizer - Professional Windows Optimization Suite</Description>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
